@@ -1,4 +1,4 @@
-# Car Rental API color
+# Car Rental API 
 This is car rental api which can perform basic car rental
 operations such as adding user, checking prices, slots
 availability, booking slots and many more.
