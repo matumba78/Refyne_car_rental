@@ -51,11 +51,14 @@ class SlotBookingSerializer(serializers.ModelSerializer):
 
 
 class SlotBookingUserSerializer(serializers.ModelSerializer):
-    user = UserSmallSerializer()
+    user = serializers.SerializerMethodField()
 
     class Meta:
         model = SlotBooking
         fields = ["user", "toDate", "fromDate"]
+
+    def get_user(self, obj):
+        return UserSmallSerializer(obj.user).data if obj.user else None
 
 
 

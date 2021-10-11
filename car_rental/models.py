@@ -26,7 +26,7 @@ class Car(models.Model):
 
     @staticmethod
     def get_car_pricing(start_date, end_date, car_id):
-        delta = ((end_date - start_date).seconds)/3600
+        delta = (end_date - start_date) // 3600
         try:
             car = Car.objects.get(pk=car_id)
         except Car.DoesNotExist:

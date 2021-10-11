@@ -71,8 +71,6 @@ class CarAvailaibility(APIView):
 
 
 class CarPricing(APIView):
-    queryset = Car.objects.all()
-    serializer_class = CarSerializer
     permission_classes = [permissions.IsAuthenticated, ]
 
     def get(self, request, *args, **kwargs):
@@ -90,29 +88,29 @@ class CarPricing(APIView):
                 "message": data
             })
         return Response({
-            "car_id": data.id,
+            "car_id": data.pk,
             "pph": data.pph,
             "price": price
         })
 
 
 class UserBookings(generics.ListAPIView):
-    queryset = Car.objects.all()
+    queryset = SlotBooking.objects.all()
     serializer_class = SlotBookingSerializer
     permission_classes = [permissions.IsAuthenticated, ]
 
-    def get_object(self):
+    def get_queryset(self):
         return SlotBooking.objects.filter(user=self.request.user)
 
 
 class CarUserBookingView(generics.ListAPIView):
-    queryset = Car.objects.all()
+    queryset = SlotBooking.objects.all()
     serializer_class = SlotBookingUserSerializer
     permission_classes = [permissions.IsAuthenticated, ]
 
-    def get_object(self):
-        car_id = self.kwargs['car_id']
-        return SlotBooking.objects.filter(car_id=int(car_id))
+    def get_queryset(self):
+        car_id = self.request.query_params.get('car_id')
+        return SlotBooking.objects.filter(car_id=car_id)
 
 
 class CarBooking(APIView):
@@ -120,10 +118,12 @@ class CarBooking(APIView):
 
     def post(self, request, *args, **kwargs):
         car_id = request.data.get("car_id")
-        to_date_time = request.query_params.get('toDateTime', None)
-        from_date_time = request.query_params.get('fromDateTime', None)
+        to_date_time = request.data.get('toDateTime', None)
+        from_date_time = request.data.get('fromDateTime', None)
+        if not to_date_time or not from_date_time or not car_id:
+            return Response("[ Date range / car ID ] is required to find car pricing")
         try:
-            Car.objects.get(id=car_id)
+            Car.objects.get(pk=car_id)
         except Car.DoesNotExist:
             return Response("This car does not exist", status=400)
         availability = SlotBooking.objects.filter(car_id=car_id, toDate__lte=to_date_time, fromDate__gte=from_date_time)
@@ -133,7 +133,7 @@ class CarBooking(APIView):
                                         user=request.user,
                                         toDate=to_date_time,
                                         fromDate=from_date_time)
-        return Response(CarSerializer(data).data, status=201)
+        return Response(SlotBookingUserSerializer(data).data, status=201)
 
 
 
